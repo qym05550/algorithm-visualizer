@@ -1,0 +1,58 @@
+.visualizer-controls {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.visualizer-controls__row {
+  display: flex;
+  gap: 12px;
+}
+
+/* The shared .button class defaults to width: 100% for its usual
+   full-width sidebar context; here the buttons sit side by side and
+   should only be as wide as their label. */
+.visualizer-controls .button {
+  width: auto;
+  min-width: 110px;
+}
+
+/* Step indicator: subtle by design so it never competes with the array
+   itself for attention — small, muted text sitting just above the
+   Previous/Next/Reset row. */
+.visualizer-controls__step {
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+}
+
+/* Previous / Next: label plus a directional arrow, laid out with the
+   arrow closest to the direction it points (arrow-then-label for
+   Previous, label-then-arrow for Next). */
+.visualizer-controls__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.visualizer-controls__arrow {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+/* A quick, subtle nudge in the direction of travel on hover — never on a
+   disabled button, since pointer-events: none already keeps it from ever
+   entering :hover, and :not(:disabled) makes that explicit here too. */
+.visualizer-controls__nav:not(:disabled):hover .visualizer-controls__arrow--left {
+  transform: translateX(-4px);
+}
+
+.visualizer-controls__nav:not(:disabled):hover .visualizer-controls__arrow--right {
+  transform: translateX(4px);
+}

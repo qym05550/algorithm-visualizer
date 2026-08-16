@@ -1,0 +1,222 @@
+:root {
+  color-scheme: dark;
+
+  /* Palette — a professional, restrained dark navy theme (MVP visual
+     polish pass). Blue is deliberately muted and reserved for interface
+     controls; orange is reserved for algorithm activity (highlighting)
+     so it stays the one accent that draws the eye. --color-primary is
+     used only for the header, which should read as part of the same
+     system rather than a separate bright band. */
+  --color-primary: #111a3d;
+  --color-secondary: #1a2ca3;
+  --color-accent-blue: #6b82e8;
+  /* Slightly brighter border on hover for outlined buttons. */
+  --color-accent-blue-hover: #7b91f5;
+  /* A deeper, higher-contrast blue for solid fills (text on top) — used
+     for Done, the app's primary action. --color-accent-blue itself stays
+     reserved for outlined buttons, borders, and focus rings, where it's
+     read against a surface rather than needing text on top of it. */
+  --color-accent-blue-strong: #4f6fe8;
+  --color-accent-orange: #f59b6a;
+
+  /* Surfaces: --color-bg is the darkest tone (app shell / main Visualizer
+     area); --color-surface is a visually distinct but subtly-so, slightly
+     lighter navy used for the sidebar, form controls, and array cells —
+     the main/sidebar distinction should come from this small surface
+     difference plus a border and spacing, not a strong color contrast. */
+  --color-bg: #0b1228;
+  --color-surface: #111a33;
+  --color-border: #263454;
+  --color-text: #f1f4fa;
+  --color-text-muted: #8e9bb8;
+
+  /* Dark-theme equivalents of the original (light-theme) validation
+     colors — still read unambiguously as an error against navy. */
+  --color-error: #ff9a90;
+  --color-error-bg: #3a1420;
+  --color-error-border: #6e2436;
+
+  /* Dark-theme equivalents for the success/confirmation status message. */
+  --color-success-bg: #14204f;
+  --color-success-border: #2c3f8a;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared form controls                                                */
+/* ------------------------------------------------------------------ */
+
+.select-control,
+.text-control {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.select-control:focus-visible,
+.text-control:focus-visible {
+  outline: 2px solid var(--color-accent-blue);
+  outline-offset: 1px;
+  border-color: var(--color-accent-blue);
+}
+
+.text-control {
+  resize: vertical;
+  min-height: 72px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                             */
+/* ------------------------------------------------------------------ */
+
+.button {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Outlined style: transparent fill so it reads correctly on either the
+   sidebar surface or the darker main Visualizer background. The border
+   carries the "interactive, blue = interface" signal; the label itself
+   stays light/neutral text rather than colored, so the interface reads
+   as restrained rather than saturated blue. Orange is reserved
+   exclusively for the Visualizer's algorithm-state highlight. */
+.button--secondary {
+  background: transparent;
+  border-color: var(--color-accent-blue);
+  color: var(--color-text);
+}
+
+.button--secondary:not(:disabled):hover {
+  background: rgba(107, 130, 232, 0.12);
+  border-color: var(--color-accent-blue-hover);
+}
+
+/* Solid fill for the app's primary action (Done) — the strongest filled
+   button in the interface, and the only one that isn't outlined, so it
+   stays visually distinct from Previous/Next/Reset/Generate Random. */
+.button--primary {
+  background: var(--color-accent-blue-strong);
+  color: var(--color-text);
+}
+
+.button--primary:not(:disabled):hover {
+  background: #5d79f0;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-accent-blue);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar sections                                                    */
+/* ------------------------------------------------------------------ */
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-section__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.sidebar-section__hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.sidebar-section__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Status / validation messages                                        */
+/* ------------------------------------------------------------------ */
+
+.status-message {
+  font-size: 13px;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.status-message--error {
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+}
+
+.status-message--success {
+  color: var(--color-accent-blue);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+}
