@@ -1,0 +1,12 @@
+.header {
+  flex-shrink: 0;
+  background: var(--color-primary);
+  padding: 16px 32px;
+}
+
+.header__title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
