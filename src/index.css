@@ -40,6 +40,19 @@
   --color-success-bg: #14204f;
   --color-success-border: #2c3f8a;
 
+  /* Centralized animation timing (Animation System / Visual Motion
+     Polish). Presentation-layer CSS that animates the array
+     visualization references these instead of hardcoding its own
+     duration, so the whole feature can be re-tuned from one place.
+     --anim-highlight-duration covers the COMPARE/SWAP highlight color
+     fade; --anim-swap-duration covers the SWAP position-exchange slide.
+     Both are collapsed to near-zero under prefers-reduced-motion (see
+     ArrayRenderer.css), which is why they live in variables rather than
+     being repeated as literals. */
+  --anim-highlight-duration: 200ms;
+  --anim-swap-duration: 380ms;
+  --anim-easing: ease;
+
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -88,6 +101,17 @@ button {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 10px 12px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover gives a small amount of interaction feedback even before a control
+   is focused — a slightly lighter border, nothing that competes with the
+   stronger focus-visible treatment below. */
+.select-control:hover,
+.text-control:hover {
+  border-color: var(--color-accent-blue-hover);
 }
 
 .select-control:focus-visible,
@@ -105,6 +129,20 @@ button {
   line-height: 1.6;
 }
 
+/* Invalid state: applied alongside .text-control when the sibling
+   validation message is an error, so the field itself — not only the
+   message below it — visibly communicates "this needs attention." Reuses
+   the same error tokens already established for .status-message--error
+   rather than introducing a new color. */
+.text-control--invalid {
+  border-color: var(--color-error-border);
+}
+
+.text-control--invalid:hover,
+.text-control--invalid:focus-visible {
+  border-color: var(--color-error);
+}
+
 /* ------------------------------------------------------------------ */
 /* Buttons                                                             */
 /* ------------------------------------------------------------------ */
@@ -119,9 +157,10 @@ button {
   border: 1px solid transparent;
   cursor: pointer;
   transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
 }
 
 /* Outlined style: transparent fill so it reads correctly on either the
@@ -151,6 +190,13 @@ button {
 
 .button--primary:not(:disabled):hover {
   background: #5d79f0;
+}
+
+/* Pressed/active feedback: a small, immediate scale-down so clicking any
+   button gives tactile confirmation, independent of color. Kept subtle
+   (1%) so it reads as "pressed" rather than a bounce/effect. */
+.button:not(:disabled):active {
+  transform: scale(0.98);
 }
 
 .button:focus-visible {
@@ -219,4 +265,17 @@ button {
   color: var(--color-accent-blue);
   background: var(--color-success-bg);
   border: 1px solid var(--color-success-border);
+}
+
+/* Global reduced-motion guard for the small UI-chrome transitions added in
+   this polish pass (button press feedback, hover border transitions) — a
+   separate, much smaller concern from the Visualizer's own SWAP/COMPARE
+   animation system, which already declares its own reduced-motion rules
+   in ArrayRenderer.css / BarRenderer.css and is untouched here. */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .select-control,
+  .text-control {
+    transition-duration: 0.01ms;
+  }
 }

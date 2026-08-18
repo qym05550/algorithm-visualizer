@@ -1,0 +1,214 @@
+.bar-renderer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 12px;
+  /* Professional Bar View Redesign task (section 8, "chart framing"):
+     generous internal breathing room top/bottom rather than a hard border
+     or a card treatment — the chart earns a sense of a dedicated region
+     from spacing and the baseline's own visual weight, not from a frame
+     that would put it in visual competition with Statistics/Code View's
+     actual card treatment. Left/right stay flush so wide rows still use
+     the available width exactly as before. */
+  padding: 20px 0 4px;
+  /* Dynamic Visualization Sizing task: matches ArrayRenderer.css's own
+     explicit width: 100% and the reasoning documented there — without it,
+     this flex-wrap container shrinks to fit its (previously fixed-size)
+     content instead of reporting the space actually available, which
+     would make BarRenderer.tsx's own width measurement circular. */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.bar-renderer__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* The whole moving unit for the SWAP slide animation (registered with
+   useSwapSlideAnimation) — both zones, the baseline, and whichever label
+   is currently shown all travel together. */
+.bar-renderer__track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Dynamic Visualization Sizing task: driven by --track-size, computed
+     in BarRenderer.tsx from the array's length and the container's
+     measured width (itemSizing.ts) — the 28px fallback matches this
+     project's previous fixed track width, in case the custom property is
+     ever unset. */
+  width: var(--track-size, 28px);
+  transition:
+    width var(--anim-highlight-duration) var(--anim-easing),
+    transform var(--anim-swap-duration) var(--anim-easing);
+}
+
+/* Positive and negative zones are equal, fixed-height reservations on
+   either side of the baseline — this symmetry is what makes every item's
+   own zone boundary line up into one continuous baseline across the
+   whole row (and across wrapped rows), without needing a separate
+   absolutely-positioned overlay. */
+.bar-renderer__zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 180px; /* keep in sync with BarRenderer.tsx's MAX_BAR_LENGTH_PX */
+}
+
+/* Bars grow from the edge nearest the baseline: the positive zone packs
+   its children (label, then bar) toward its bottom edge, so the bar
+   touches the baseline and the label sits just above it. */
+.bar-renderer__zone--positive {
+  justify-content: flex-end;
+}
+
+/* The negative zone packs its children (bar, then label) toward its top
+   edge, so the bar touches the baseline from below and the label sits
+   just beneath it. */
+.bar-renderer__zone--negative {
+  justify-content: flex-start;
+}
+
+/* Professional Bar View Redesign task (section 1, "baseline"): the chart's
+   visual anchor — deliberately a hair more present than the plain
+   --color-border used everywhere else in the app (ArrayRenderer's cell
+   borders, the sidebar's section dividers) so it still reads clearly as an
+   axis with all-positive, all-negative, mixed, or all-zero data (an
+   all-zero array is nothing *but* this line — see BarRenderer.tsx's zero
+   handling), while staying a single thin rule rather than a heavy divider
+   that would compete with the bars themselves. */
+.bar-renderer__baseline {
+  width: 100%;
+  height: 0;
+  border-top: 1px solid var(--color-accent-blue);
+  opacity: 0.4;
+}
+
+.bar-renderer__bar {
+  /* Dynamic Visualization Sizing task: previously capped independently
+     (min-width: 18px; max-width: 24px) so the bar stayed narrower than
+     its fixed 28px track, leaving a small gutter on either side beyond
+     the 12px gap already between tracks. Now that the track itself is
+     the dynamically-sized, explicitly-bounded box (--track-size, driven
+     by BarRenderer.tsx / itemSizing.ts), the bar simply fills it —
+     duplicating a second min/max here would just fight the track's own
+     bounds instead of tracking them. */
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  /* A bar of height 0 (a zero value, or the unused half of the bar for
+     whichever sign this value isn't) is completely invisible — nothing
+     to distinguish it from "no bar" is needed since the numeric label
+     next to the baseline already communicates the value directly (Bar
+     View task section 3). */
+  transition:
+    background-color var(--anim-highlight-duration) var(--anim-easing),
+    border-color var(--anim-highlight-duration) var(--anim-easing),
+    box-shadow var(--anim-highlight-duration) var(--anim-easing);
+}
+
+/* Professional Bar View Redesign task (section 2/4, "bar shape" and
+   "positive/negative visual language"): rounded only at the end farthest
+   from the baseline, square where the bar actually meets it — a small
+   geometric cue (on top of position) that a positive and a negative bar
+   are two ends of the same axis rather than unrelated shapes, and a more
+   deliberate "chart bar" silhouette than a uniformly-rounded rectangle
+   would read as. Kept modest (4px) per the task's own "do not over-round"
+   instruction. */
+.bar-renderer__zone--positive .bar-renderer__bar {
+  border-radius: 4px 4px 1px 1px;
+  /* A faint lift toward the tip reads as a hair of dimension without
+     introducing any new hue — still exactly --color-surface at the base. */
+  background: linear-gradient(to top, var(--color-surface), rgba(255, 255, 255, 0.05));
+}
+
+.bar-renderer__zone--negative .bar-renderer__bar {
+  border-radius: 1px 1px 4px 4px;
+  background: linear-gradient(to bottom, var(--color-surface), rgba(255, 255, 255, 0.05));
+}
+
+/* Professional Bar View Redesign task (section 5, "COMPARE state"): a
+   restrained combination of border + soft glow + a light background tint
+   — the existing highlight color (--color-accent-orange), just not as a
+   full solid fill, so a COMPARE "should not destroy the normal bar
+   appearance" (task's own wording) the way the bolder SWAP treatment
+   below deliberately does. This is also still the exact class every
+   existing test queries for (`.bar-renderer__bar--highlighted`) — a SWAP
+   below adds a second class on top rather than replacing this one, so
+   "exactly one highlighted bar per highlighted index" remains true either
+   way. */
+.bar-renderer__bar--highlighted {
+  background: rgba(245, 155, 106, 0.16);
+  border-color: var(--color-accent-orange);
+  box-shadow: 0 0 0 3px rgba(245, 155, 106, 0.14);
+}
+
+/* Professional Bar View Redesign task (section 6, "SWAP state"): the
+   bolder of the two highlight treatments — a solid fill rather than a
+   tint — reserved for the pair of bars actually mid-exchange (see
+   BarRenderer.tsx's isSwapping), so a SWAP reads as a more decisive event
+   than a COMPARE while still using nothing but the same existing accent
+   color at a different intensity. The FLIP slide itself is entirely
+   useSwapSlideAnimation's concern (applied to .bar-renderer__track,
+   unchanged by this task) — this only changes what the sliding bar looks
+   like while it moves. */
+.bar-renderer__bar--swap {
+  background: var(--color-accent-orange);
+  border-color: var(--color-accent-orange);
+  box-shadow: 0 0 0 4px rgba(245, 155, 106, 0.22);
+}
+
+.bar-renderer__value {
+  font-family: var(--font-mono);
+  /* Professional Bar View Redesign task (section 3, "value labels"):
+     driven by --value-font-size (BarRenderer.tsx), the same
+     "old fixed value is the floor, computed sizing adds a ceiling"
+     pattern ArrayRenderer.css's own --cell-font-size already follows —
+     the 12px fallback matches this component's previous fixed size, in
+     case the custom property is ever unset. */
+  font-size: var(--value-font-size, 12px);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    color var(--anim-highlight-duration) var(--anim-easing),
+    font-size var(--anim-highlight-duration) var(--anim-easing);
+}
+
+.bar-renderer__value--highlighted {
+  color: var(--color-accent-orange);
+  font-weight: 700;
+}
+
+.bar-renderer__index {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.bar-renderer__empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Respect the user's reduced-motion preference, mirroring
+   ArrayRenderer.css's identical rule for the same reason: the underlying
+   state (bar lengths, which cells are highlighted, final swapped
+   positions) is completely unaffected, only the decorative motion between
+   states is removed. Reuses the same centralized custom properties
+   (src/index.css :root) rather than introducing a second motion system. */
+@media (prefers-reduced-motion: reduce) {
+  .bar-renderer__track,
+  .bar-renderer__bar,
+  .bar-renderer__value {
+    transition-duration: 0.01ms;
+  }
+}

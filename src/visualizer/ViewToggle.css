@@ -1,0 +1,28 @@
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* Reuses .button/.button--secondary's sizing and hover treatment; only
+   overrides the full-width default (same reasoning as
+   VisualizerControls.css's identical override) since two toggle options
+   sit side by side rather than stacked. */
+.view-toggle__button {
+  width: auto;
+  min-width: 84px;
+}
+
+/* The active view reads as "selected" the same way a filled/primary
+   button does elsewhere in the app, without introducing a new color —
+   the existing accent-blue-strong fill already means "this one, not the
+   others" (Done vs. the outlined controls next to it). */
+.view-toggle__button--active {
+  background: var(--color-accent-blue-strong);
+  border-color: var(--color-accent-blue-strong);
+  color: var(--color-text);
+}
+
+.view-toggle__button--active:not(:disabled):hover {
+  background: #5d79f0;
+}

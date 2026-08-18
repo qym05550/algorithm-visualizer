@@ -4,7 +4,18 @@
   justify-content: center;
   align-content: center;
   gap: 12px;
+  /* Dynamic Visualization Sizing task: an explicit width (not just the
+     max-width below) so this container always stretches to its parent's
+     full available width, whatever the array currently holds — a
+     flex-wrap container with only a max-width shrinks to fit its content
+     instead. This matters beyond the visual layout: ArrayRenderer.tsx
+     measures this exact element's own clientWidth via useContainerWidth
+     to decide how large each cell should be, so the measurement itself
+     would be circular (content-sized container -> content-derived
+     "available" width) without this. */
+  width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 .array-renderer__item {
@@ -18,24 +29,64 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  height: 40px;
+  /* Dynamic Visualization Sizing task: driven by --cell-size, computed in
+     ArrayRenderer.tsx from the array's length and the container's
+     measured width (itemSizing.ts). min-width (not width) deliberately
+     preserved from the original fixed-42px rule: a cell must still be
+     able to grow past --cell-size for a value whose text genuinely needs
+     more room (e.g. a manually-typed multi-digit or negative number),
+     exactly as it already could before this task — only the floor is now
+     dynamic instead of a bare constant. The 42px/15px fallbacks match
+     this project's previous fixed sizing, in case either custom property
+     is ever unset. */
+  min-width: var(--cell-size, 42px);
+  height: var(--cell-size, 42px);
   padding: 0 8px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   background: var(--color-surface);
   color: var(--color-text);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: var(--cell-font-size, 15px);
   font-weight: 600;
   line-height: 1;
+  /* Motion Polish: the highlight fade (border/background/color/shadow,
+     driven purely by the --highlighted class toggling below) and the SWAP
+     position-exchange slide (transform, driven imperatively by
+     ArrayRenderer's FLIP effect) both read their duration from the same
+     centralized custom properties (src/index.css :root) instead of a
+     literal repeated in each rule. */
+  transition:
+    border-color var(--anim-highlight-duration) var(--anim-easing),
+    background-color var(--anim-highlight-duration) var(--anim-easing),
+    color var(--anim-highlight-duration) var(--anim-easing),
+    box-shadow var(--anim-highlight-duration) var(--anim-easing),
+    transform var(--anim-swap-duration) var(--anim-easing);
 }
 
 .array-renderer__value--highlighted {
   border-color: var(--color-accent-orange);
-  background: rgba(245, 155, 106, 0.1);
+  background: rgba(245, 155, 106, 0.14);
   color: var(--color-text);
   font-weight: 700;
+  /* A soft glow reinforces "this is the active element" beyond color
+     alone (task: don't rely only on color to communicate state) —
+     subtle enough that it reads as emphasis, not decoration. */
+  box-shadow: 0 0 0 3px rgba(245, 155, 106, 0.16);
+}
+
+/* Respect the user's reduced-motion preference: collapse every animated
+   transition on the array cells to effectively instant. The underlying
+   state changes (which values are shown, which cells carry the
+   --highlighted class, final swapped positions) are completely
+   unaffected — only the decorative motion between states is removed, so
+   no information is lost, per PROJECT.md's Visualizer responsibility
+   (rendering the correct state) staying intact regardless of motion
+   preference. */
+@media (prefers-reduced-motion: reduce) {
+  .array-renderer__value {
+    transition-duration: 0.01ms;
+  }
 }
 
 .array-renderer__index {

@@ -1,0 +1,29 @@
+/* Version Badge task: styled as metadata, not a UI control — small, muted,
+   subtle, reusing existing color/font variables rather than introducing a
+   new visual theme. position: fixed keeps it pinned to the viewport corner
+   without affecting the document flow or layout dimensions of the header,
+   sidebar, or visualizer. */
+.version-badge {
+  position: fixed;
+  left: 16px;
+  bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+  letter-spacing: 0.02em;
+  /* A faint surface chip (reusing the existing --color-surface /
+     --color-border tokens, no new palette) keeps contrast consistent
+     regardless of what's behind it — the header's navy, the main area's
+     darker background, or the sidebar when the layout stacks at narrow
+     widths — without making the badge look like an interactive button. */
+  background: rgba(17, 26, 51, 0.55);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  line-height: 1.4;
+  /* Metadata, not a control: never intercepts clicks or gets selected. */
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}

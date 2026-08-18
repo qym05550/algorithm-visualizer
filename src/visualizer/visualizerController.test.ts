@@ -4,14 +4,30 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { bubbleSort } from '../algorithms/bubbleSort'
-import { VisualizerController, type VisualState } from './visualizerController'
+import type { Operation } from '../operations/operation'
+import { VisualizerController, type Algorithm, type VisualState } from './visualizerController'
 
 const INPUT = [8, 3, 5, 1]
 
+/**
+ * A small, deterministic test Algorithm — deliberately NOT Bubble Sort.
+ * It ignores whatever array it's called with and always returns a fixed,
+ * pre-supplied Operations sequence. This is what lets the behavioral
+ * tests below pin an exact, known sequence while proving
+ * VisualizerController genuinely works with an *injected* Algorithm,
+ * rather than one it imports itself.
+ */
+function fixedOperationsAlgorithm(operations: readonly Operation[]): Algorithm {
+  return () => operations
+}
+
 // Hand-traced against the standard Bubble Sort pass structure (no
 // early-exit optimization) and cross-checked below against the real
-// bubbleSort() output for the same input.
-const EXPECTED_OPERATIONS = [
+// bubbleSort() output for the same input. Explicitly typed as Operation[]
+// (rather than inferred) so it can be passed to fixedOperationsAlgorithm()
+// below, which requires a real Operation[], not just an object shape that
+// happens to look like one.
+const EXPECTED_OPERATIONS: Operation[] = [
   { type: 'compare', indices: [0, 1] },
   { type: 'swap', indices: [0, 1] },
   { type: 'compare', indices: [1, 2] },
@@ -49,7 +65,7 @@ describe('VisualizerController — matches the real bubbleSort() output', () => 
 
 describe('VisualizerController — initial state', () => {
   it('returns the exact initial VisualState via a full toEqual', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
 
     const expected: VisualState = {
       array: [8, 3, 5, 1],
@@ -66,7 +82,7 @@ describe('VisualizerController — initial state', () => {
 
 describe('VisualizerController — initial state for an empty array', () => {
   it('has no operations to run, so neither next() nor previous() can do anything', () => {
-    const controller = new VisualizerController([])
+    const controller = new VisualizerController([], fixedOperationsAlgorithm([]))
 
     expect(controller.getState()).toEqual({
       array: [],
@@ -82,7 +98,7 @@ describe('VisualizerController — initial state for an empty array', () => {
 
 describe('VisualizerController — initial state for a single-element array', () => {
   it('has no operations, since a single element needs no comparisons', () => {
-    const controller = new VisualizerController([42])
+    const controller = new VisualizerController([42], fixedOperationsAlgorithm([]))
 
     expect(controller.getState()).toEqual({
       array: [42],
@@ -98,7 +114,7 @@ describe('VisualizerController — initial state for a single-element array', ()
 
 describe('VisualizerController — next() with a COMPARE operation', () => {
   it('leaves the array unchanged and highlights the compared pair', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next()
 
     const state = controller.getState()
@@ -111,7 +127,7 @@ describe('VisualizerController — next() with a COMPARE operation', () => {
 
 describe('VisualizerController — next() with a SWAP operation', () => {
   it('updates the array and highlights the swapped pair', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next() // compare(0, 1)
     controller.next() // swap(0, 1)
 
@@ -125,7 +141,7 @@ describe('VisualizerController — next() with a SWAP operation', () => {
 
 describe('VisualizerController — highlightedIndices is never hard-coded', () => {
   it('always reflects the current operation’s own indices, not a fixed pair', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next() // compare(0, 1)
     controller.next() // swap(0, 1)
     controller.next() // compare(1, 2)
@@ -136,7 +152,7 @@ describe('VisualizerController — highlightedIndices is never hard-coded', () =
 
 describe('VisualizerController — full forward walk matches bubbleSort exactly', () => {
   it('reproduces every operation, array, and step count across the whole sequence', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
 
     for (let i = 0; i < EXPECTED_OPERATIONS.length; i++) {
       controller.next()
@@ -154,7 +170,7 @@ describe('VisualizerController — full forward walk matches bubbleSort exactly'
 
 describe('VisualizerController — canGoNext / canGoPrevious across the sequence', () => {
   it('is true/false in the middle of the sequence and flips only at the boundaries', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
 
     expect(controller.getState().canGoNext).toBe(true)
     expect(controller.getState().canGoPrevious).toBe(false)
@@ -165,7 +181,7 @@ describe('VisualizerController — canGoNext / canGoPrevious across the sequence
   })
 
   it('sets canGoNext to false and canGoPrevious to true once every operation has run', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     for (let i = 0; i < EXPECTED_OPERATIONS.length; i++) controller.next()
 
     const state = controller.getState()
@@ -176,7 +192,7 @@ describe('VisualizerController — canGoNext / canGoPrevious across the sequence
 
 describe('VisualizerController — next() at the end', () => {
   it('does nothing once every operation has executed', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     for (let i = 0; i < EXPECTED_OPERATIONS.length; i++) controller.next()
 
     const before = controller.getState()
@@ -190,7 +206,7 @@ describe('VisualizerController — next() at the end', () => {
 
 describe('VisualizerController — previous() after a SWAP', () => {
   it('restores the array from before the swap and updates currentOperation', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next() // compare(0, 1)
     controller.next() // swap(0, 1) -> [3, 8, 5, 1]
 
@@ -206,7 +222,7 @@ describe('VisualizerController — previous() after a SWAP', () => {
 
 describe('VisualizerController — previous() after a COMPARE', () => {
   it('leaves the array unchanged and clears currentOperation back to undefined', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next() // compare(0, 1)
 
     controller.previous()
@@ -221,7 +237,7 @@ describe('VisualizerController — previous() after a COMPARE', () => {
 
 describe('VisualizerController — previous() at the beginning', () => {
   it('does nothing at the initial state', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
 
     const before = controller.getState()
     controller.previous()
@@ -233,7 +249,7 @@ describe('VisualizerController — previous() at the beginning', () => {
 
 describe('VisualizerController — full forward then full reverse', () => {
   it('returns to exactly the initial VisualState', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     const initial = controller.getState()
 
     for (let i = 0; i < EXPECTED_OPERATIONS.length; i++) controller.next()
@@ -245,7 +261,7 @@ describe('VisualizerController — full forward then full reverse', () => {
 
 describe('VisualizerController — reset() after partial execution', () => {
   it('restores the array, currentStep, and currentOperation to their initial values', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next()
     controller.next()
     controller.next()
@@ -264,7 +280,7 @@ describe('VisualizerController — reset() after partial execution', () => {
 
 describe('VisualizerController — reset() after full completion', () => {
   it('restores the array to its initial (unsorted) values, not the sorted result', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     for (let i = 0; i < EXPECTED_OPERATIONS.length; i++) controller.next()
 
     controller.reset()
@@ -275,7 +291,7 @@ describe('VisualizerController — reset() after full completion', () => {
 
 describe('VisualizerController — reset() reuses the same Operations, without regenerating them', () => {
   it('replays an identical sequence after reset(), proving Operations are not recomputed', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     for (let i = 0; i < EXPECTED_OPERATIONS.length; i++) controller.next()
 
     controller.reset()
@@ -292,7 +308,10 @@ describe('VisualizerController — input immutability', () => {
   it('never mutates the array passed to the constructor', () => {
     const input = [9, 4, 6, 1, 3]
     const snapshot = [...input]
-    const controller = new VisualizerController(input)
+    // Uses the real bubbleSort here (still just one legitimate Algorithm
+    // among others) so this specific invariant is checked against a real
+    // algorithm run, not only the fixed test fixture.
+    const controller = new VisualizerController(input, bubbleSort)
 
     for (let i = 0; i < 20; i++) controller.next()
 
@@ -302,7 +321,7 @@ describe('VisualizerController — input immutability', () => {
 
 describe('VisualizerController — getState() immutability / no side effects', () => {
   it('returns an equal VisualState on repeated calls without advancing', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     controller.next()
 
     const first = controller.getState()
@@ -312,7 +331,7 @@ describe('VisualizerController — getState() immutability / no side effects', (
   })
 
   it('does not let mutating a returned VisualState affect the controller', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     const state = controller.getState()
     const arrayCopy = [...state.array]
 
@@ -326,7 +345,7 @@ describe('VisualizerController — getState() immutability / no side effects', (
 
 describe('VisualizerController — totalSteps', () => {
   it('equals the number of generated Operations and never changes as the session advances', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     expect(controller.getState().totalSteps).toBe(EXPECTED_OPERATIONS.length)
 
     controller.next()
@@ -341,14 +360,18 @@ describe('VisualizerController — totalSteps', () => {
   })
 
   it('is 0 for inputs with no comparisons (empty or single-element arrays)', () => {
-    expect(new VisualizerController([]).getState().totalSteps).toBe(0)
-    expect(new VisualizerController([7]).getState().totalSteps).toBe(0)
+    expect(
+      new VisualizerController([], fixedOperationsAlgorithm([])).getState().totalSteps,
+    ).toBe(0)
+    expect(
+      new VisualizerController([7], fixedOperationsAlgorithm([])).getState().totalSteps,
+    ).toBe(0)
   })
 })
 
 describe('VisualizerController — currentOperation is undefined, never null', () => {
   it('exposes undefined (not null) before any operation has run', () => {
-    const controller = new VisualizerController(INPUT)
+    const controller = new VisualizerController(INPUT, fixedOperationsAlgorithm(EXPECTED_OPERATIONS))
     expect(controller.getState().currentOperation).toBeUndefined()
     // Explicitly not null, matching the documented VisualState contract.
     expect(controller.getState().currentOperation).not.toBeNull()
@@ -356,7 +379,7 @@ describe('VisualizerController — currentOperation is undefined, never null', (
 })
 
 describe('VisualizerController — architecture boundaries', () => {
-  it('imports only from the algorithms, engine, and operations layers — never React, CSS, or ArrayRenderer', () => {
+  it('imports only from the engine and operations layers — never algorithms, React, CSS, or ArrayRenderer', () => {
     const currentFile = fileURLToPath(import.meta.url)
     const controllerPath = join(dirname(currentFile), 'visualizerController.ts')
     const source = readFileSync(controllerPath, 'utf-8')
@@ -376,15 +399,116 @@ describe('VisualizerController — architecture boundaries', () => {
       expect(specifier.startsWith('react')).toBe(false)
       expect(specifier.endsWith('.css')).toBe(false)
       expect(specifier.toLowerCase()).not.toContain('arrayrenderer')
+      // The key post-MVP-review invariant: VisualizerController must not
+      // depend on any specific algorithm implementation — only on the
+      // Algorithm shape (derived from Operation) and ExecutionEngine.
+      expect(specifier.startsWith('../algorithms/')).toBe(false)
 
-      const allowed =
-        specifier.startsWith('../algorithms/') ||
-        specifier.startsWith('../engine/') ||
-        specifier.startsWith('../operations/')
+      const allowed = specifier.startsWith('../engine/') || specifier.startsWith('../operations/')
       expect(allowed).toBe(true)
     }
 
     expect(source).not.toContain('react')
     expect(source).not.toContain('.css')
+  })
+
+  it('has no dependency on Bubble Sort specifically, or on any concrete algorithm name', () => {
+    const currentFile = fileURLToPath(import.meta.url)
+    const controllerPath = join(dirname(currentFile), 'visualizerController.ts')
+    const source = readFileSync(controllerPath, 'utf-8')
+
+    expect(source).not.toContain('bubbleSort')
+    expect(source).not.toContain('bubble-sort')
+    expect(source.toLowerCase()).not.toContain('bubble sort')
+  })
+})
+
+describe('VisualizerController — algorithm injection', () => {
+  it('accepts an injected algorithm through its constructor', () => {
+    const algorithm: Algorithm = () => [{ type: 'compare', indices: [0, 1] }]
+    const controller = new VisualizerController([5, 2], algorithm)
+
+    expect(controller.getState().totalSteps).toBe(1)
+  })
+
+  it('calls the injected algorithm exactly once during construction', () => {
+    let callCount = 0
+    const algorithm: Algorithm = () => {
+      callCount++
+      return [{ type: 'compare', indices: [0, 1] }]
+    }
+
+    const controller = new VisualizerController([5, 2], algorithm)
+    expect(callCount).toBe(1)
+
+    // Reading state, and stepping through it, must not re-invoke the
+    // algorithm — the Operations sequence generated at construction is
+    // what the whole session (including reset()) reuses.
+    controller.getState()
+    controller.next()
+    controller.getState()
+    expect(callCount).toBe(1)
+  })
+
+  it('reset() does not call the algorithm again', () => {
+    let callCount = 0
+    const algorithm: Algorithm = () => [
+      { type: 'compare', indices: [0, 1] },
+      { type: 'swap', indices: [0, 1] },
+    ]
+    const trackedAlgorithm: Algorithm = (input) => {
+      callCount++
+      return algorithm(input)
+    }
+
+    const controller = new VisualizerController([5, 2], trackedAlgorithm)
+    controller.next()
+    controller.next()
+    controller.reset()
+    controller.next()
+
+    expect(callCount).toBe(1)
+  })
+
+  it('uses the operations the injected algorithm actually generated, not a fixed default', () => {
+    // A deliberately unusual, non-Bubble-Sort sequence — a single SWAP
+    // with no preceding COMPARE — to prove the controller just plays back
+    // whatever the injected algorithm returned, without imposing any
+    // Bubble-Sort-shaped assumptions of its own.
+    const algorithm: Algorithm = () => [{ type: 'swap', indices: [1, 2] }]
+    const controller = new VisualizerController([7, 4, 9], algorithm)
+
+    controller.next()
+    const state = controller.getState()
+
+    expect(state.array).toEqual([7, 9, 4])
+    expect(state.currentOperation).toEqual({ type: 'swap', indices: [1, 2] })
+    expect(state.highlightedIndices).toEqual([1, 2])
+    expect(state.canGoNext).toBe(false)
+  })
+
+  it('two different injected algorithms produce different operation sequences from the same input', () => {
+    const shortAlgorithm: Algorithm = () => [{ type: 'compare', indices: [0, 1] }]
+    const longAlgorithm: Algorithm = () => [
+      { type: 'compare', indices: [0, 1] },
+      { type: 'swap', indices: [0, 1] },
+      { type: 'compare', indices: [1, 2] },
+    ]
+
+    const shortController = new VisualizerController(INPUT, shortAlgorithm)
+    const longController = new VisualizerController(INPUT, longAlgorithm)
+
+    expect(shortController.getState().totalSteps).toBe(1)
+    expect(longController.getState().totalSteps).toBe(3)
+    expect(shortController.getState().totalSteps).not.toBe(longController.getState().totalSteps)
+  })
+
+  it('also works with the real bubbleSort as one example of a valid injected Algorithm', () => {
+    // bubbleSort() is not special-cased by the controller — it's just one
+    // function matching the Algorithm shape, exactly like the synthetic
+    // ones above.
+    const controller = new VisualizerController(INPUT, bubbleSort)
+
+    expect(controller.getState().totalSteps).toBe(EXPECTED_OPERATIONS.length)
   })
 })

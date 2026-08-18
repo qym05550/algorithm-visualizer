@@ -1,0 +1,88 @@
+/* Draggable Statistics/Code View Panels task: a small drag handle strip
+   attached directly above each panel's own existing card
+   (StatisticsPanel.css / CodeView.css — both untouched, task requirement
+   3). Uses only existing design-system tokens (--color-surface,
+   --color-border) so it reads as part of the same card rather than a new
+   visual element, and stays intentionally plain (task requirement 2: "Do
+   not add excessive visual decoration"). */
+
+.statistics-panel-overlay,
+.code-view-overlay {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Removes the gap the card's own margin-top (StatisticsPanel.css /
+   CodeView.css) would otherwise leave between it and the handle now
+   sitting directly above it. Overridden here, at the same "external
+   layout" layer that already positions these panels
+   (VisualizationPlaceholder.css), rather than in the panel's own file —
+   two classes beat one in specificity, so this reliably wins regardless
+   of stylesheet import order. */
+.statistics-panel-overlay > .statistics-panel,
+.code-view-overlay > .code-view {
+  margin-top: 0;
+}
+
+.draggable-panel__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  /* Communicates "draggable" without relying on the cursor alone (task
+     requirement 2/15) — a title-bar shape plus the grip glyph below. */
+  cursor: grab;
+  /* Stops the browser's own touch-scroll/pan gesture from competing with
+     a touch-driven drag on this element. */
+  touch-action: none;
+}
+
+.draggable-panel__handle:active {
+  cursor: grabbing;
+}
+
+/* While a drag is in progress, `useDraggablePanel` sets `data-dragging`
+   (not a class — see DraggablePanel.tsx's own doc comment for why) on the
+   panel root; reflect that back onto the handle's cursor and give the
+   whole panel a stronger shadow so it visually reads as "lifted" while
+   moving (task requirement 14). */
+.statistics-panel-overlay[data-dragging='true'],
+.code-view-overlay[data-dragging='true'] {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.statistics-panel-overlay[data-dragging='true'] .draggable-panel__handle,
+.code-view-overlay[data-dragging='true'] .draggable-panel__handle {
+  cursor: grabbing;
+}
+
+.draggable-panel__grip {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 1px;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+/* Narrow layout: both overlays already fall back to normal document flow
+   at this breakpoint (VisualizationPlaceholder.css's own existing
+   `@media (max-width: 1000px)` rules) — hiding the handle here is what
+   keeps dragging unavailable there (task requirement 10) without
+   duplicating the breakpoint value in JS: with no handle to press, no
+   drag can ever start. Restores each card's own original margin-top so
+   the pre-existing narrow-layout spacing is completely unchanged. */
+@media (max-width: 1000px) {
+  .draggable-panel__handle {
+    display: none;
+  }
+
+  .statistics-panel-overlay > .statistics-panel,
+  .code-view-overlay > .code-view {
+    margin-top: 28px;
+  }
+}

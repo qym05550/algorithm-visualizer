@@ -5,6 +5,62 @@
   align-items: center;
   justify-content: center;
   padding: 32px;
+  /* Anchors .code-view-overlay below, so Code View positions itself
+     relative to the whole visualization region instead of the page (Move
+     Code View into the Main Visualization Area task). */
+  position: relative;
+}
+
+/* Narrower widths get less breathing room around the visualizer so more
+   of it stays on-screen without introducing scroll — the visualizer
+   itself already wraps (ArrayRenderer.css / BarRenderer.css), this just
+   keeps the padding proportional. */
+@media (max-width: 860px) {
+  .main-area {
+    padding: 24px 16px;
+  }
+}
+
+/* Below 1000px, .code-view-overlay switches from an absolutely positioned
+   overlay to a normal-flow block (see .code-view-overlay's own comment
+   below). .main-area is a row flex container by default, which is
+   irrelevant while the overlay is taken out of flow via position:
+   absolute, but would otherwise place it beside .visualizer as a second
+   column instead of stacking above it — switching to a column direction
+   here is what makes it actually stack above the visualizer at these
+   widths, matching task section 5. */
+@media (max-width: 1000px) {
+  .main-area {
+    flex-direction: column;
+  }
+}
+
+/* Dynamic Visualization Sizing task: at desktop widths, where both side
+   panels are absolutely positioned overlays (not part of the flex layout
+   at all — see .code-view-overlay / .statistics-panel-overlay below),
+   .visualizer itself is centered across .main-area's *entire* width with
+   no awareness that the panels exist. Before this task, the array/bar
+   renderer's items were always a small fixed size, so a centered row
+   never grew wide enough to actually reach either panel's corner in
+   practice. Now that item size scales up for shorter arrays (down to a
+   handful of elements), a centered row can legitimately become wide
+   enough to extend underneath the panels. Extra left/right padding here
+   — sized to clear each panel's own maximum footprint (offset + width)
+   plus a small visual gap — keeps .visualizer's own available width
+   (and therefore ArrayRenderer/BarRenderer's measured width, and
+   therefore the computed item size) honestly excluding that space,
+   rather than relying on coincidence. Asymmetric because the two panels
+   are different widths (Statistics: 260px, CodeView.css's own cap;
+   CodeView: 320px, .code-view-overlay's own cap) — reserving the same
+   amount on both sides would either under-reserve one side or
+   over-reserve the other. Scoped to the same breakpoint the panels
+   themselves switch to overlay positioning at (1000px) — below that they
+   are already in normal document flow, so no reservation is needed. */
+@media (min-width: 1001px) {
+  .main-area {
+    padding-left: 316px; /* 32px offset + 260px panel + 24px gap */
+    padding-right: 376px; /* 32px offset + 320px panel + 24px gap */
+  }
 }
 
 .visualizer {
@@ -12,6 +68,89 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+}
+
+/* Move Code View into the Main Visualization Area: Code View now lives
+   here, as an overlay/panel belonging to the visualization workspace
+   rather than a row sharing space with Statistics below the controls
+   (Statistics keeps its previous position/styling untouched — only Code
+   View moved). A sibling of .visualizer inside .main-area so it can be
+   positioned against the whole visualization region, in its preferred
+   top-right corner, without affecting the centered layout of the
+   ViewToggle/renderer/controls/Statistics column below it.
+
+   At desktop widths it's an absolutely positioned overlay: pinned to
+   .main-area's own top-right padding corner, capped narrow enough
+   (min(320px, ...)) that it reads as a compact panel rather than
+   competing with the visualization for width, with a shadow (rather than
+   Statistics/CodeView's usual flat border-only treatment) specifically so
+   it reads as floating above the workspace rather than sitting inline
+   like a settings panel.
+
+   Below 1000px — one of the task's own required verification widths —
+   overlay positioning risks colliding with a wide array/controls, so it
+   drops back into normal document flow (task section 5: "acceptable to
+   let Code View become part of the normal flow and stack above/below the
+   visualization if overlay positioning would cause overlap"), centered
+   above the visualizer column with the same max-width CodeView already
+   caps itself to. */
+.code-view-overlay {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  width: min(320px, calc(100% - 64px));
+  z-index: 2;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 1000px) {
+  .code-view-overlay {
+    position: static;
+    width: 100%;
+    max-width: min(480px, 100%);
+    margin: 0 auto 28px;
+    box-shadow: none;
+  }
+}
+
+/* Move Statistics Panel to the Top-Left of the Visualization Area: the
+   same overlay treatment as .code-view-overlay above, mirrored to the
+   opposite corner of .main-area. Statistics keeps its own internal
+   styling/content entirely unchanged (StatisticsPanel.tsx/.css) — only
+   where it sits moved. Kept as its own sibling (not reusing
+   .code-view-overlay) so each panel's corner can be tuned independently
+   without a shared class fighting itself with `left`/`right` overrides. */
+.statistics-panel-overlay {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  /* Sized to StatisticsPanel's own natural max-width (260px,
+     StatisticsPanel.css) rather than .code-view-overlay's 320px — Code
+     View's own content is capped at 480px, wider than that 320px overlay,
+     so it fills the overlay edge-to-edge; Statistics's own cap is
+     narrower, so matching widths here keeps this wrapper's box-shadow
+     hugging the visible card instead of surrounding extra empty space
+     the card doesn't actually fill. */
+  width: min(260px, calc(100% - 64px));
+  z-index: 2;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 1000px) {
+  .statistics-panel-overlay {
+    position: static;
+    width: 100%;
+    /* Matches StatisticsPanel's own max-width (260px, StatisticsPanel.css)
+       rather than CodeView's wider 480px cap above — the wrapper's width
+       should track its child's actual rendered width so `margin: auto`
+       centers the visible panel itself, not an oversized invisible box
+       around a narrower, left-flush panel. */
+    max-width: min(260px, 100%);
+    margin: 0 auto 28px;
+    box-shadow: none;
+  }
 }
 
 .visualization-placeholder {

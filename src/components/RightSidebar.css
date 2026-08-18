@@ -6,6 +6,134 @@
   padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
   overflow-y: auto;
+  /* Sidebar Show/Hide Toggle task: only width/padding/opacity/border ever
+     need to transition — background/gap/flex-direction never change
+     between the open and collapsed states, so nothing else needs to be
+     listed here. Kept subtle and fast per the task's own instruction. */
+  transition:
+    width 180ms ease,
+    padding 180ms ease,
+    opacity 150ms ease,
+    border-color 180ms ease;
+}
+
+/* Sidebar Show/Hide Toggle task: collapses the panel down to nothing while
+   it stays mounted (see RightSidebar.tsx's own doc comment for why) —
+   `overflow: hidden` here (rather than on the base `.sidebar` rule, which
+   still needs `overflow-y: auto` for its normal scrolling content) is what
+   keeps the collapsing content from visibly spilling out during the width
+   transition. A compound selector (not just `.sidebar--collapsed` alone)
+   so this reliably overrides `.sidebar`'s own width regardless of
+   stylesheet order, including the medium-breakpoint 260px override below. */
+.sidebar.sidebar--collapsed {
+  width: 0;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+  border-left-color: transparent;
+  overflow: hidden;
+}
+
+/* Sidebar Polish task: the panel's own visible title (see RightSidebar.tsx)
+   — a step below the app Header's title in weight/size so it reads as
+   "this panel's name," not a second page heading, and set off from the
+   first section with its own hairline rather than the standard 28px
+   section gap alone, echoing (at a smaller scale) the same "border, not a
+   card" separator language already used between sections below. */
+.sidebar__heading {
+  margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+/* Each section after the first gets a hairline separator above it instead
+   of relying on whitespace alone — this is what makes "Algorithm" and
+   "Array" read as distinct control groups rather than one long stack of
+   unrelated fields, while keeping the panel visually calm (a border, not
+   a card/shadow treatment). */
+.sidebar > .sidebar-section + .sidebar-section {
+  padding-top: 28px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Sidebar Polish task: a small accent mark ahead of each section's own
+   label — a restrained "control panel" cue (echoing a gauge/toggle
+   tick-mark) reinforcing that each label introduces a distinct group of
+   controls, built entirely from the existing accent-blue token already
+   used for borders/focus rings everywhere else in the app. Applied as a
+   sidebar-scoped override of the shared `.sidebar-section__label` (defined
+   once in index.css and also unused outside this panel) rather than
+   editing that shared rule directly, matching the same override pattern
+   `.sidebar > .sidebar-section + .sidebar-section` above already uses. */
+.sidebar .sidebar-section__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sidebar .sidebar-section__label::before {
+  content: '';
+  flex-shrink: 0;
+  width: 3px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--color-accent-blue);
+}
+
+/* Below the layout's stacking breakpoint (see App.css), the sidebar sits
+   underneath the visualizer instead of beside it — full width, with the
+   dividing border moved from its left edge to its top edge to match its
+   new position. */
+@media (max-width: 860px) {
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    /* The stacking breakpoint's own transition axis: .app__body is a
+       column here (App.css), so the sidebar's "size" is its height, not
+       its width — max-height is the standard technique for animating
+       toward 0 on an axis whose open-state size is otherwise `auto` and so
+       can't be transitioned directly. 600px is a generous ceiling comfortably
+       above this panel's real content height (Algorithm select + Array
+       textarea + actions + status message), so it never visibly clips the
+       open state; overflow-y: auto above still handles the rare case where
+       it would. */
+    max-height: 600px;
+    transition:
+      max-height 180ms ease,
+      padding 180ms ease,
+      opacity 150ms ease,
+      border-color 180ms ease;
+  }
+
+  /* Same collapse, mirrored to this breakpoint's own axis (height, not
+     width) and its own border edge (top, not left) — width intentionally
+     stays 100% here since the column layout was never sizing the sidebar
+     by width in the first place. */
+  .sidebar.sidebar--collapsed {
+    width: 100%;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    border-top-color: transparent;
+    overflow: hidden;
+  }
+}
+
+/* Respects the user's reduced-motion preference, mirroring the identical
+   rule already established for the app's other UI-chrome transitions
+   (src/index.css) — the underlying open/closed state is completely
+   unaffected, only the decorative slide/fade between them is removed. */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition-duration: 0.01ms;
+  }
 }

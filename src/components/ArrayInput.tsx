@@ -69,13 +69,14 @@ function ArrayInput({ onArrayConfirmed }: ArrayInputProps) {
       </label>
       <textarea
         id="array-input"
-        className="text-control"
+        className={error ? 'text-control text-control--invalid' : 'text-control'}
         rows={3}
         value={inputValue}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder="e.g. 8, 3, 5, 1, 7, 2, 9, 4, 6, 10"
         aria-describedby="array-input-hint"
+        aria-invalid={error ? true : undefined}
       />
       <p className="sidebar-section__hint" id="array-input-hint">
         Comma-separated numbers. {DEFAULT_ARRAY_SIZE} by default, up to{' '}

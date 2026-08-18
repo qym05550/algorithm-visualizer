@@ -2,6 +2,11 @@
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+  /* Belt-and-suspenders against horizontal page overflow: the real fix is
+     .main-area's min-width: 0 (below) and the sidebar's responsive width,
+     but this guarantees a stray wide child can never introduce a page-level
+     horizontal scrollbar. */
+  overflow-x: hidden;
 }
 
 .app__body {
@@ -9,4 +14,24 @@
   min-height: 0;
   display: flex;
   align-items: stretch;
+}
+
+/* Responsive: this project remains desktop-focused (PROJECT.md 1), so this
+   is intentionally not a mobile-first redesign — just enough of a fallback
+   at narrower-than-usual widths that the fixed-width sidebar can never
+   force the page to overflow horizontally. Below this width, the sidebar
+   drops beneath the visualizer instead of sitting beside it. */
+@media (max-width: 860px) {
+  .app__body {
+    flex-direction: column;
+  }
+}
+
+/* A medium width still has room for the sidebar beside the visualizer,
+   but the sidebar's usual 320px is proportionally large at this size —
+   narrow it slightly rather than let it dominate. */
+@media (min-width: 861px) and (max-width: 1100px) {
+  .sidebar {
+    width: 260px;
+  }
 }

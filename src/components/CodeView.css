@@ -1,0 +1,97 @@
+/* Educational Code View task: a small "code editor"-style panel. Uses the
+   existing --color-surface / --color-border / --color-text-muted /
+   --color-accent-orange tokens only — no new palette. --color-surface (the
+   same tone used for the sidebar and array cells) rather than --color-bg
+   (the main Visualizer area's own background) is what makes this read as
+   a distinct, secondary information panel sitting on top of the main
+   area, without introducing a new surface color. */
+.code-view {
+  width: 100%;
+  /* Capped so the panel never dominates the visualization above it, but
+     never wider than its own container either — combined with the line
+     text's own wrapping below, this is what keeps the panel from ever
+     causing horizontal overflow at narrow widths. */
+  max-width: min(480px, 100%);
+  margin-top: 28px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+
+.code-view__label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.code-view__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  /* Lets long lines scroll within the panel instead of forcing it wider,
+     as a fallback alongside the line text's own wrapping below. */
+  overflow-x: auto;
+}
+
+.code-view__line {
+  display: flex;
+  gap: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  /* A transparent border reserves the same 3px of space the active state
+     below fills with color — so highlighting a line never shifts any
+     other line horizontally (task: "stable line positions"). */
+  border-left: 3px solid transparent;
+  transition:
+    background-color var(--anim-highlight-duration) var(--anim-easing),
+    border-color var(--anim-highlight-duration) var(--anim-easing);
+}
+
+.code-view__line-number {
+  flex-shrink: 0;
+  width: 1.75em;
+  text-align: right;
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.code-view__line-text {
+  /* Preserves the pseudocode's embedded leading-space indentation while
+     still allowing very long lines to wrap within the panel rather than
+     overflow it (task section 18). */
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-text);
+}
+
+/* Active line: not color alone (task section 19) — a filled background, a
+   colored left border (a structural/positional cue, not just a hue), and
+   bolder text together communicate "this line is active." */
+.code-view__line--active {
+  background: rgba(245, 155, 106, 0.14);
+  border-left-color: var(--color-accent-orange);
+}
+
+.code-view__line--active .code-view__line-text {
+  font-weight: 700;
+}
+
+/* Respect the user's reduced-motion preference, exactly like the
+   Visualizer's own SWAP/COMPARE highlight transitions — the active line
+   itself is completely unaffected, only how quickly its color arrives. */
+@media (prefers-reduced-motion: reduce) {
+  .code-view__line {
+    transition-duration: 0.01ms;
+  }
+}

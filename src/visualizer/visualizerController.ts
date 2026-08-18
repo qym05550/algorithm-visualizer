@@ -1,6 +1,15 @@
-import { bubbleSort } from '../algorithms/bubbleSort'
 import { ExecutionEngine } from '../engine/executionEngine'
 import type { Operation } from '../operations/operation'
+
+/**
+ * The shape any algorithm must have to be usable by VisualizerController:
+ * a pure function from an input array to the ordered Operations sequence
+ * that produces it (PROJECT.md 4, 18.2). Derived directly from the
+ * existing `Operation` type; nothing new is introduced into the operation
+ * model itself. VisualizerController depends only on this shape, never on
+ * a specific implementation of it.
+ */
+export type Algorithm = (input: readonly number[]) => readonly Operation[]
 
 /**
  * The visual state a rendering layer needs for one frame of a
@@ -26,26 +35,29 @@ export interface VisualState {
 }
 
 /**
- * Adapts a Bubble Sort execution session (Algorithm -> Operations ->
+ * Adapts an Algorithm's execution session (Algorithm -> Operations ->
  * ExecutionEngine) into the VisualState a rendering layer needs
- * (PROJECT.md 3, 12, 18.15-18.17).
+ * (PROJECT.md 3, 12, 17, 18.15-18.17).
  *
- * Generates Operations exactly once, at construction, and creates a
- * single ExecutionEngine that owns the rest of the session — the same
- * Operations sequence is reused for the whole session, including across
- * reset(). This class does not duplicate the Engine's state; getState()
- * simply reads it and reshapes it for display.
+ * Takes the algorithm to run as a constructor parameter rather than
+ * importing one directly, so this class has no dependency on any specific
+ * algorithm implementation — only on the Algorithm shape above and on
+ * ExecutionEngine. Calls that algorithm exactly once, at construction, and
+ * creates a single ExecutionEngine that owns the rest of the session — the
+ * same Operations sequence is reused for the whole session, including
+ * across reset(). This class does not duplicate the Engine's state;
+ * getState() simply reads it and reshapes it for display.
  *
  * Framework-independent: no React import, nothing rendered here. A UI
  * layer calls next() / previous() / reset() and re-reads getState() to
- * know what to display; it never has to talk to Bubble Sort, Operations,
+ * know what to display; it never has to talk to the algorithm, Operations,
  * or the ExecutionEngine directly.
  */
 export class VisualizerController {
   private readonly engine: ExecutionEngine
 
-  constructor(initialArray: readonly number[]) {
-    const operations = bubbleSort(initialArray)
+  constructor(initialArray: readonly number[], algorithm: Algorithm) {
+    const operations = algorithm(initialArray)
     this.engine = new ExecutionEngine(initialArray, operations)
   }
 

@@ -1,13 +1,15 @@
 .visualizer-controls {
-  margin-top: 24px;
+  margin-top: 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .visualizer-controls__row {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
 }
 
@@ -17,6 +19,44 @@
 .visualizer-controls .button {
   width: auto;
   min-width: 110px;
+}
+
+/* Play/Stop sits at a slightly narrower min-width than Previous/Next
+   (which carry an arrow glyph plus a longer label) so the three-button
+   row doesn't feel unbalanced. */
+.visualizer-controls__play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 90px;
+}
+
+/* Second row: Reset alongside the speed selector, sitting at the same
+   scale as the row above rather than Reset's old full-width-of-its-line
+   presentation. */
+.visualizer-controls__row--secondary {
+  align-items: center;
+}
+
+.visualizer-controls__speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.visualizer-controls__speed-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* .select-control defaults to width: 100% for its usual full-width
+   sidebar context, same reasoning as .visualizer-controls .button above. */
+.visualizer-controls__speed-select {
+  width: auto;
+  min-width: 100px;
+  padding: 8px 10px;
+  font-size: 13px;
 }
 
 /* Step indicator: subtle by design so it never competes with the array

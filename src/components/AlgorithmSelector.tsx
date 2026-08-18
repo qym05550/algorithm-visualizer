@@ -1,8 +1,21 @@
-// Only Bubble Sort exists for now. This establishes the UI structure for
-// future algorithms — it does not select or run anything yet.
-const ALGORITHMS = ['Bubble Sort'] as const
+interface AlgorithmSelectorProps {
+  /** The algorithm names to list, in display order. */
+  options: readonly string[]
+  /** The currently selected algorithm name. */
+  value: string
+  /** Called with the newly selected algorithm name when the user changes it. */
+  onChange: (value: string) => void
+}
 
-function AlgorithmSelector() {
+/**
+ * Purely presentational: a controlled dropdown that displays whichever
+ * algorithm names it's given and reports selection changes upward. It
+ * does not know what an algorithm *is* (no Operation, no Algorithm
+ * function, no import from src/algorithms) — the parent owns the mapping
+ * from name to implementation and decides what this represents (the next
+ * session's algorithm, not necessarily the one currently visualizing).
+ */
+function AlgorithmSelector({ options, value, onChange }: AlgorithmSelectorProps) {
   return (
     <div className="sidebar-section">
       <label className="sidebar-section__label" htmlFor="algorithm-select">
@@ -11,9 +24,10 @@ function AlgorithmSelector() {
       <select
         id="algorithm-select"
         className="select-control"
-        defaultValue={ALGORITHMS[0]}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
       >
-        {ALGORITHMS.map((algorithm) => (
+        {options.map((algorithm) => (
           <option key={algorithm} value={algorithm}>
             {algorithm}
           </option>

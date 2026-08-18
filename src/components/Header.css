@@ -1,12 +1,77 @@
 .header {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  /* Sidebar Show/Hide Toggle task: the toggle sits at the header's
+     opposite edge from the title, the same "title left, action right"
+     placement the rest of the app never needed before now. */
+  justify-content: space-between;
+  /* A hair taller than the sidebar/main-area padding scale (24-32px) so
+     the header reads as a distinct, deliberate band rather than an
+     afterthought, while still feeling compact. */
+  padding: 18px 32px;
   background: var(--color-primary);
-  padding: 16px 32px;
+  /* A subtle seam between the header and the body below it — the two
+     areas already differ in background color, this just makes the edge
+     between them crisp rather than a soft color transition. */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .header__title {
   color: #ffffff;
   font-size: 18px;
   font-weight: 600;
+  line-height: 1.3;
   letter-spacing: -0.1px;
+}
+
+/* Sidebar Show/Hide Toggle task: a compact icon-only control, deliberately
+   not built from the shared .button class — .button is sized/weighted for
+   the sidebar's own full-width text actions (Done, Generate Random), while
+   this needs to read as a small piece of persistent chrome that never
+   competes with the title for attention. Still built entirely from
+   existing tokens (the same accent-blue border/hover language every other
+   interactive control in the app already uses) rather than a new palette. */
+.header__sidebar-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.header__sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.header__sidebar-toggle:active {
+  transform: scale(0.94);
+}
+
+.header__sidebar-toggle:focus-visible {
+  outline: 2px solid var(--color-accent-blue);
+  outline-offset: 2px;
+}
+
+.header__sidebar-toggle-icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header__sidebar-toggle {
+    transition-duration: 0.01ms;
+  }
 }

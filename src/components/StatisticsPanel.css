@@ -1,0 +1,122 @@
+/* Statistics & Complexity Panel task: a compact card, visually consistent
+   with CodeView's own panel treatment (same --color-surface background,
+   --color-border, radius, and padding scale) so the two read as one
+   family of "secondary information panels" rather than two different
+   visual languages. */
+.statistics-panel {
+  width: 100%;
+  max-width: min(260px, 100%);
+  /* Matches CodeView's own top margin so the two panels align evenly
+     whether they end up side by side or stacked (see the
+     .visualizer__panels wrapper in VisualizationPlaceholder.css, which
+     intentionally adds no margin of its own). */
+  margin-top: 28px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+}
+
+.statistics-panel__label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.statistics-panel__step {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Live counters — the primary information in this panel (task section 6:
+   "The live counters should be the primary information"), so they get
+   the panel's strongest text weight/contrast; complexity below is
+   deliberately smaller and more muted. */
+/* ------------------------------------------------------------------ */
+
+.statistics-panel__counters {
+  margin: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statistics-panel__counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.statistics-panel__counter dt {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.statistics-panel__counter dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* Total Operations reads as a small sum beneath the two components that
+   make it up — a top border rather than a color change, so it stays
+   readable without relying on hue alone. */
+.statistics-panel__counter--total {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ------------------------------------------------------------------ */
+/* Complexity — static metadata, visually secondary to the counters
+   above: smaller text, muted color, no bold weight. */
+/* ------------------------------------------------------------------ */
+
+.statistics-panel__complexity {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.statistics-panel__complexity-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.statistics-panel__complexity-group-label {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.statistics-panel__complexity-group-label:first-of-type {
+  margin-top: 0;
+}
+
+.statistics-panel__complexity-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding: 1px 0;
+}
+
+.statistics-panel__complexity-row span:last-child {
+  color: var(--color-text);
+}

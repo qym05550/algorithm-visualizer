@@ -15,18 +15,38 @@ interface VisualizerControlsProps {
   currentStep: number
   /** The total number of Operations in this session, for display only. */
   totalSteps: number
+  /** Whether autoplay is currently running. Drives whether this renders a
+   *  Play or a Stop button — this component has no autoplay state of its
+   *  own, it only reflects what it's told. */
+  isPlaying: boolean
+  /** Called when Play is clicked (only rendered/reachable while !isPlaying). */
+  onPlay: () => void
+  /** Called when Stop is clicked (only rendered/reachable while isPlaying). */
+  onStop: () => void
+  /** The currently selected autoplay speed name, e.g. "Normal". */
+  speed: string
+  /** The available speed names, in display order. */
+  speedOptions: readonly string[]
+  /** Called with the newly selected speed name when the user changes it. */
+  onSpeedChange: (speed: string) => void
 }
 
 /**
- * Presentational execution controls for the Visualizer: a step indicator
- * plus the Previous, Next, and Reset buttons. This component only renders
- * what it's given and reports clicks upward — it knows nothing about
- * Bubble Sort, the Execution Engine, Operations, or VisualizerController
- * itself (PROJECT.md 12, 18.14, 18.15). currentStep/totalSteps are passed
- * straight through from VisualizerController's own VisualState; no step
- * counting happens here.
+ * Presentational execution controls for the Visualizer: a step indicator,
+ * the Previous/Play-or-Stop/Next row, and a second row with Reset and the
+ * speed selector. This component only renders what it's given and reports
+ * interactions upward — it knows nothing about Bubble Sort, the Execution
+ * Engine, Operations, VisualizerController, or autoplay timers themselves
+ * (PROJECT.md 12, 18.14, 18.15). All of currentStep/totalSteps/isPlaying/
+ * speed are passed straight through from the container's own state; no
+ * counting, playback scheduling, or algorithm knowledge happens here.
  *
  * Reset has no disabled state: it is always available, per PROJECT.md 18.13.
+ * Play reuses the existing canGoNext — it's disabled under exactly the same
+ * conditions Next already is (zero steps, or already at the final step),
+ * so no separate "canPlay" concept is needed. Stop has no disabled state:
+ * it's only ever rendered while autoplay is actually running, so stopping
+ * is always available whenever it's shown.
  */
 function VisualizerControls({
   onPrevious,
@@ -36,6 +56,12 @@ function VisualizerControls({
   canGoNext,
   currentStep,
   totalSteps,
+  isPlaying,
+  onPlay,
+  onStop,
+  speed,
+  speedOptions,
+  onSpeedChange,
 }: VisualizerControlsProps) {
   return (
     <div className="visualizer-controls">
@@ -56,6 +82,24 @@ function VisualizerControls({
         </button>
         <button
           type="button"
+          className="button button--secondary visualizer-controls__play"
+          onClick={isPlaying ? onStop : onPlay}
+          disabled={!isPlaying && !canGoNext}
+        >
+          {isPlaying ? (
+            <>
+              <span aria-hidden="true">■</span>
+              <span>Stop</span>
+            </>
+          ) : (
+            <>
+              <span aria-hidden="true">▶</span>
+              <span>Play</span>
+            </>
+          )}
+        </button>
+        <button
+          type="button"
           className="button button--secondary visualizer-controls__nav"
           onClick={onNext}
           disabled={!canGoNext}
@@ -66,9 +110,28 @@ function VisualizerControls({
           </span>
         </button>
       </div>
-      <button type="button" className="button button--secondary" onClick={onReset}>
-        Reset
-      </button>
+      <div className="visualizer-controls__row visualizer-controls__row--secondary">
+        <button type="button" className="button button--secondary" onClick={onReset}>
+          Reset
+        </button>
+        <div className="visualizer-controls__speed">
+          <label htmlFor="playback-speed" className="visualizer-controls__speed-label">
+            Speed
+          </label>
+          <select
+            id="playback-speed"
+            className="select-control visualizer-controls__speed-select"
+            value={speed}
+            onChange={(event) => onSpeedChange(event.target.value)}
+          >
+            {speedOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
     </div>
   )
 }
